@@ -1,26 +1,24 @@
-import { Separator } from '@/components/ui/separator'
-import { UIState } from '@/lib/chat/actions'
-import { Session } from '@/lib/types'
-import Link from 'next/link'
-import { ExclamationTriangleIcon } from '@radix-ui/react-icons'
+import { ChatMessage } from './chat-message';
+import { useContext } from 'react';
+import { ChatbotUIContext } from '@/lib/chat/context';
+import { EmptyScreen } from './empty-screen';
 
-export interface ChatList {
-  messages: UIState
-}
+interface ChatListType {}
 
-export function ChatList({ messages }: ChatList) {
-  if (!messages.length) {
-    return null
+export function ChatList({}: ChatListType) {
+  const { chatMessages, isGenerating } = useContext(ChatbotUIContext);
+  if (!chatMessages.length) {
+    return <EmptyScreen />;
   }
 
   return (
-    <div className="relative mx-auto max-w-2xl px-4">
-      {messages.map((message, index) => (
+    <div className="relative mx-auto max-w-2xl px-4 flex flex-col gap-8">
+      {chatMessages.map((message, index) => (
         <div key={message.id}>
-          {message.display}
-          {index < messages.length - 1 && <Separator className="my-4" />}
+          <ChatMessage message={message} isLoading={!message.content} />
+          {/* {isLoading && <ChatMessage message={message} isLoading />} */}
         </div>
       ))}
     </div>
-  )
+  );
 }

@@ -1,74 +1,37 @@
-'use client'
+'use client';
 
-import * as React from 'react'
-import Textarea from 'react-textarea-autosize'
+import Textarea from 'react-textarea-autosize';
 
-import { useActions, useUIState } from 'ai/rsc'
+import { Button } from '@/components/ui/button';
+import { IconArrowElbow } from '@/components/ui/icons';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useEnterSubmit } from '@/lib/hooks/use-enter-submit';
+import { useChatHandler } from '@/lib/hooks/use-chat-handler';
+import { ChatbotUIContext } from '@/lib/chat/context';
+import { useContext } from 'react';
 
-import { UserMessage } from './stocks/message'
-import { type AI } from '@/lib/chat/actions'
-import { Button } from '@/components/ui/button'
-import { IconArrowElbow, IconPlus } from '@/components/ui/icons'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger
-} from '@/components/ui/tooltip'
-import { useEnterSubmit } from '@/lib/hooks/use-enter-submit'
-import { nanoid } from 'nanoid'
-import { useRouter } from 'next/navigation'
+export function PromptForm() {
+  const { formRef, onKeyDown } = useEnterSubmit();
+  const { chatInputRef, handleSendMessage, handleStopMessage, handleFocusChatInput } =
+    useChatHandler();
 
-export function PromptForm({
-  input,
-  setInput
-}: {
-  input: string
-  setInput: (value: string) => void
-}) {
-  const router = useRouter()
-  const { formRef, onKeyDown } = useEnterSubmit()
-  const inputRef = React.useRef<HTMLTextAreaElement>(null)
-  const { submitUserMessage } = useActions()
-  const [_, setMessages] = useUIState<typeof AI>()
-
-  React.useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.focus()
-    }
-  }, [])
+  const { userInput, setUserInput, chatMessages, isGenerating } = useContext(ChatbotUIContext);
 
   return (
     <form
       ref={formRef}
-      onSubmit={async (e: any) => {
-        e.preventDefault()
-
+      onSubmit={(e) => {
+        e.preventDefault();
         // Blur focus on mobile
         if (window.innerWidth < 600) {
-          e.target['message']?.blur()
+          (e.target as any)['message']?.blur();
         }
-
-        const value = input.trim()
-        setInput('')
-        if (!value) return
-
-        // Optimistically add user message UI
-        setMessages(currentMessages => [
-          ...currentMessages,
-          {
-            id: nanoid(),
-            display: <UserMessage>{value}</UserMessage>
-          }
-        ])
-
-        // Submit and get response message
-        const responseMessage = await submitUserMessage(value)
-        setMessages(currentMessages => [...currentMessages, responseMessage])
+        handleSendMessage(userInput, chatMessages);
       }}
     >
       <div className="relative flex max-h-60 w-full grow flex-col overflow-hidden bg-background pr-8 sm:rounded-md sm:border sm:pr-12">
         <Textarea
-          ref={inputRef}
+          ref={chatInputRef}
           tabIndex={0}
           onKeyDown={onKeyDown}
           placeholder="Send a message."
@@ -79,13 +42,13 @@ export function PromptForm({
           autoCorrect="off"
           name="message"
           rows={1}
-          value={input}
-          onChange={e => setInput(e.target.value)}
+          value={userInput}
+          onChange={(e) => setUserInput(e.target.value)}
         />
         <div className="absolute right-0 top-[13px] sm:right-4">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button type="submit" size="icon" disabled={input === ''}>
+              <Button type="submit" size="icon" disabled={userInput === ''}>
                 <IconArrowElbow />
                 <span className="sr-only">Send message</span>
               </Button>
@@ -95,5 +58,5 @@ export function PromptForm({
         </div>
       </div>
     </form>
-  )
+  );
 }
