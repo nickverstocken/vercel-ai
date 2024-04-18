@@ -46,8 +46,8 @@ export const processResponse = async (
       response.body,
       (chunk) => {
         setFirstTokenReceived(true);
-
         try {
+          console.log(chunk);
           fullText += chunk;
         } catch (error) {
           console.error('Error parsing chunk:', error);
